@@ -149,6 +149,7 @@ scene.render.alpha_mode = 'TRANSPARENT'
 cam = scene.objects['Camera']
 image_id = 0
 cam_location_base_list = [(0, 0.01, 3), (0, 3, 0), (0, 2.5, 2.5)]
+
 for cam_location_base in cam_location_base_list:
     cam.location = cam_location_base
     cam_constraint = cam.constraints.new(type='TRACK_TO')
@@ -169,7 +170,6 @@ for cam_location_base in cam_location_base_list:
 
     for i in range(0, args.views):
         print("Rotation {}, {}".format((stepsize * i), radians(stepsize * i)))
-
         scene.render.filepath = args.output_folder + '{0:02d}'.format(image_id)
         # depth_file_output.file_slots[0].path = scene.render.filepath + "_depth.png"
         # normal_file_output.file_slots[0].path = scene.render.filepath + "_normal.png"
