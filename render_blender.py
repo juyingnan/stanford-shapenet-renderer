@@ -9,6 +9,7 @@ import argparse
 import sys
 import os
 from math import radians
+import math
 
 parser = argparse.ArgumentParser(description='Renders given obj file by rotation a camera around it.')
 parser.add_argument('--views', type=int, default=8,
@@ -124,7 +125,7 @@ bpy.ops.object.lamp_add(type='SUN')
 lamp2 = bpy.data.lamps['Sun']
 lamp2.shadow_method = 'NOSHADOW'
 lamp2.use_specular = False
-lamp2.energy = 0.015
+lamp2.energy = 0.8
 bpy.data.objects['Sun'].rotation_euler = bpy.data.objects['Lamp'].rotation_euler
 bpy.data.objects['Sun'].rotation_euler[0] += 180
 
@@ -148,10 +149,13 @@ scene.render.resolution_percentage = 100
 scene.render.alpha_mode = 'TRANSPARENT'
 cam = scene.objects['Camera']
 image_id = 0
-cam_location_base_list = [(0, 0.01, 3), (0, 3, 0), (0, 2.5, 2.5)]
+cam_location_base_list = [(0, 0.0001, 2), (0, 2, 0), (0, 1.5, 1.5)]
+render_list_file_path = fp = os.path.join(args.output_folder, 'rendering_metadata.txt')
+f = open(render_list_file_path, "w")
 
 for cam_location_base in cam_location_base_list:
-    cam.location = cam_location_base
+    cam.location = cam_location_base[:3]
+    phi = math.degrees(math.atan(cam.location[2] / cam.location[1]))
     cam_constraint = cam.constraints.new(type='TRACK_TO')
     cam_constraint.track_axis = 'TRACK_NEGATIVE_Z'
     cam_constraint.up_axis = 'UP_Y'
@@ -168,6 +172,7 @@ for cam_location_base in cam_location_base_list:
     for output_node in [depth_file_output, normal_file_output, albedo_file_output]:
         output_node.base_path = ''
 
+    base_angle = 270
     for i in range(0, args.views):
         print("Rotation {}, {}".format((stepsize * i), radians(stepsize * i)))
         scene.render.filepath = args.output_folder + '{0:02d}'.format(image_id)
@@ -179,3 +184,10 @@ for cam_location_base in cam_location_base_list:
 
         b_empty.rotation_euler[2] += radians(stepsize)
         image_id += 1
+
+        # output rendering file
+        angle = (base_angle - stepsize * i + 360) % 360
+        distance = math.sqrt(sum([item * item for item in cam.location])) # * 0.57
+        f.write('{} {} 0 {} 25\n'.format(angle, phi, distance))
+
+f.close()
